@@ -17,20 +17,24 @@ const AITeacher = {
      `;
      document.body.appendChild(teacherDiv);
   },
-  async showTip(manualMessage, duration = 5000) {
+  async showTip(manualMessage, duration = 8000) {
     let msg = manualMessage;
+    let structuredAdvice = null;
     
-    // Let Genkit invent a tip if none provided natively
+    // Let Genkit invent tips if none provided natively
     if(!msg) {
         if(typeof firebase !== 'undefined' && firebase.apps.length > 0) {
             try {
-                const contextMap = Store.getAllItems().map(i => ({ n: i.name, stock: i.batches.reduce((sum,b) => sum + (b.totalUnits||0), 0) }));
+                const contextMap = Store.getAllItems().map(i => ({ 
+                    n: i.name, 
+                    stock: i.batches.reduce((sum,b) => sum + (b.totalUnits||0), 0) 
+                }));
                 const payload = JSON.stringify(contextMap);
                 const askAITeacher = firebase.functions().httpsCallable('askAITeacher');
                 const result = await askAITeacher({ inventoryContext: payload });
-                msg = result.data.advice;
+                structuredAdvice = result.data;
             } catch(e) {
-                console.warn("Genkit AITeacher unreachable (ensure emulator and GEMINI key are running):", e);
+                console.warn("Genkit AITeacher unreachable:", e);
                 msg = this.tips[Math.floor(Math.random() * this.tips.length)];
             }
         } else {
@@ -38,22 +42,34 @@ const AITeacher = {
         }
     }
 
-    const container = document.getElementById('ai-teacher-container');
+    const toast = document.getElementById('ai-teacher-toast');
     const msgEl = document.getElementById('ai-teacher-msg');
-     if(!this.active) return;
-     const toast = document.getElementById('ai-teacher-toast');
-     if(!toast) return;
-     document.getElementById('ai-teacher-msg').innerText = msg;
-     toast.classList.remove('hidden');
-     // Force reflow
-     void toast.offsetWidth;
-     toast.style.transform = 'translateX(0)';
-     lucide.createIcons();
-     
-     clearTimeout(this.timeout);
-     this.timeout = setTimeout(() => {
+    if(!this.active || !toast) return;
+
+    if (structuredAdvice) {
+        // Render rich structured advice
+        msgEl.innerHTML = `
+            <div style="margin-bottom:8px; font-weight:600; color:white;">${structuredAdvice.stockTrends}</div>
+            <ul style="margin: 8px 0; padding-left:18px; font-size:12px; color:rgba(255,255,255,0.8);">
+                ${structuredAdvice.immediateActions.map(a => `<li>${a}</li>`).join('')}
+            </ul>
+            <div style="font-style:italic; font-size:11px; color:var(--accent); border-top:1px solid rgba(255,255,255,0.1); padding-top:8px;">
+                "${structuredAdvice.motivationalTip}"
+            </div>
+        `;
+    } else {
+        msgEl.innerText = msg;
+    }
+
+    toast.classList.remove('hidden');
+    void toast.offsetWidth;
+    toast.style.transform = 'translateX(0)';
+    lucide.createIcons();
+    
+    clearTimeout(this.timeout);
+    this.timeout = setTimeout(() => {
         toast.style.transform = 'translateX(120%)';
-     }, duration);
+    }, duration);
   }
 };
 
@@ -341,59 +357,49 @@ const App = {
   },
 
   async simulateScanProgress() {
-    AITeacher.showTip("Hold the camera steady. The AI is applying a high-contrast grayscale filter to the live video frame to guarantee optimal OCR precision.", 7000);
+    AITeacher.showTip("Processing image. The AI is now analyzing the invoice structure to extract line items with high precision.");
     this.openModal(`
        <div style="text-align:center; padding: 2rem 0;">
-          <div class="scanner-pulse" style="width:60px; height:60px; border-radius:50%; margin:0 auto 1.5rem auto; border:4px solid var(--primary); border-top-color:transparent; animation: spin 1s linear infinite;"></div>
-          <h3>Running High-Accuracy AI OCR Engine...</h3>
-          <p>Initializing Local Tesseract Node & Neural Nets...</p>
+          <div class="scanner-pulse" style="width:60px; height:60px; border-radius:50%; margin:0 auto 1.5rem auto; border:4px solid var(--accent); border-top-color:transparent; animation: spin 1s linear infinite;"></div>
+          <h3>Running Cloud AI OCR Flow...</h3>
+          <p>Analyzing invoice items via Genkit & Gemini...</p>
        </div>
     `);
 
     try {
-        const worker = await Tesseract.createWorker('eng', 1, {
-            logger: m => console.log("AI Progress:", Math.round(m.progress*100) + "%")
-        });
-        
-        // PSM 6 assumes a single uniform block of text, which is highly optimal for invoices
-        await worker.setParameters({
-            tessedit_pageseg_mode: Tesseract.PSM.ASSUME_UNIFORM_BLOCK_OF_TEXT
-        });
-        
-        // Actually capture a high-contrast frame from the live video feed
         const video = document.getElementById('scanner-video');
-        let imageToScan = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+        let imageToScan = null;
         
         if (this.currentStream && video && video.videoWidth > 0) {
             const canvas = document.createElement('canvas');
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
-            // Grayscale + High Contrast filter radically improves OCR accuracy on documents
-            ctx.filter = 'grayscale(100%) contrast(150%) brightness(1.2)'; 
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            imageToScan = canvas.toDataURL('image/png');
+            imageToScan = canvas.toDataURL('image/jpeg', 0.8); // Jpeg for smaller payload
         }
 
-        const { data: { text } } = await worker.recognize(imageToScan);
-        console.log("Raw Deep AI Extraction:", text);
-        await worker.terminate();
-        
+        if (!imageToScan) throw new Error("Could not capture frame from camera.");
+
+        const invoiceOCR = firebase.functions().httpsCallable('invoiceOCR');
+        const result = await invoiceOCR({ base64Image: imageToScan });
+        const { items } = result.data;
+
         this.buzzSuccess();
         this.openModal(`
           <div style="text-align:center;">
-             <h2 style="color:var(--accent)">OCR Match Found!</h2>
-             <p style="margin:1rem 0;">Scanner successfully processed via Tesseract.js Edge AI.</p>
-             <div style="text-align:left; background:var(--bg-dark-surface); padding:1rem; border-radius:8px; margin-bottom:1.5rem;">
-                <p>+ 2 Cases: Tomato Puree</p>
-                <p>+ 70 lbs: Rib Eye</p>
+             <h2 style="color:var(--accent)">AI Extraction Complete</h2>
+             <p style="margin:1rem 0;">Successfully identified ${items.length} items from the invoice.</p>
+             <div style="text-align:left; background:var(--bg-dark-surface); padding:1rem; border-radius:8px; margin-bottom:1.5rem; max-height:150px; overflow-y:auto;">
+                ${items.map(i => `<p style="font-size:13px; margin-bottom:4px;">+ ${i.qty}${i.weight ? ' lbs' : ''} : <strong>${i.name}</strong></p>`).join('')}
              </div>
-             <button class="btn-primary" onclick="App.closeModal()"><i data-lucide="list-checks"></i> Review Checklist</button>
+             <button class="btn-primary" onclick="App.closeModal()"><i data-lucide="list-checks"></i> Review & Commit</button>
           </div>
         `);
     } catch (err) {
         this.buzzError();
-        alert("OCR Engine Error: " + err.message);
+        console.error("OCR Failure:", err);
+        alert("Genkit OCR Error (Ensure GEMINI key is set and cloud functions are running): " + err.message);
     }
   },
 

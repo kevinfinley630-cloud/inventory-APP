@@ -20,9 +20,12 @@ export const invoiceExtrationFlow = defineFlow(
   async (input: { base64Image: string }) => {
     const response = await generate({
       model: gemini15Flash,
-      prompt: "Extract the line items from this invoice picture. Pay close attention to the quantities or weights. Return strict JSON following the schema.",
+      prompt: `Extract line items from this invoice image. 
+      Identify the Product Name, Quantity (Qty), and Weight (if applicable).
+      Consolidate duplicates if possible. If a quantity is ambiguous, provide your best professional estimate.
+      Return the data in the requested strict JSON format.`,
       context: [
-        { document: { text: "", media: { url: input.base64Image } } }
+        { document: { text: "Invoice Image", media: { url: input.base64Image } } }
       ],
       output: {
         format: 'json',
