@@ -474,75 +474,11 @@ const Components = {
         </div>
       `;
       
-      // Override the old scan mockup callback dynamically to handle ALL split screen views
-      const originalSimulate = App.simulateScanProgress.bind(App);
-      App.simulateScanProgress = async () => {
-         await originalSimulate(); 
-         setTimeout(() => {
-             const leftListRecon = document.getElementById('invoice-expected-list');
-             const leftListSales = document.getElementById('sales-expected-list');
-             
-             if(leftListRecon) {
-                leftListRecon.innerHTML = `
-                  <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid var(--primary);">
-                     <p style="font-weight:bold; color:white;">Tomato Puree</p>
-                     <p style="color:var(--text-muted)">Expected: +2 Cases</p>
-                  </div>
-                  <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid var(--primary);">
-                     <p style="font-weight:bold; color:white;">Rib Eye (Beef)</p>
-                     <p style="color:var(--text-muted)">Expected: +70 lbs</p>
-                  </div>
-                `;
-                App.closeModal();
-             } else if (leftListSales) {
-                leftListSales.innerHTML = `
-                  <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid orange;">
-                     <p style="font-weight:bold; color:white;">Bison Burgers</p>
-                     <p style="color:var(--text-muted)">Verify: -3 Cases</p>
-                  </div>
-                  <div style="background:rgba(255,255,255,0.05); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid orange;">
-                     <p style="font-weight:bold; color:white;">Milk (Whole Gallon)</p>
-                     <p style="color:var(--text-muted)">Verify: -10 Gallons</p>
-                  </div>
-                `;
-                App.closeModal();
-             }
-         }, 3000); // UI buffer after Tesseract finishes
-      };
+      // The scanner logic is now handled globally in App.js
+      // When a scan happens, it will identify the item and show the detail modal.
+      // For Receiving/Sales, we could add a specific callback if needed, 
+      // but for now we follow the user's "no mock" requirement.
       
-      const originalSuccess = App.simulateSuccessScan.bind(App);
-      App.simulateSuccessScan = () => {
-         originalSuccess();
-         setTimeout(() => {
-             const rightListRecon = document.getElementById('invoice-actual-list');
-             const rightListSales = document.getElementById('sales-actual-list');
-             
-             if(rightListRecon) {
-                if(rightListRecon.innerText.includes("Awaiting")) rightListRecon.innerHTML = '';
-                rightListRecon.innerHTML += `
-                  <div style="background:rgba(16, 185, 129, 0.1); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid var(--accent);">
-                     <p style="font-weight:bold; color:var(--accent);">Match Confirmed <i data-lucide="check-circle" style="width:10px; display:inline-block;"></i></p>
-                     <p style="color:var(--text-muted)">Scanned: +1 Case</p>
-                  </div>
-                `;
-                const btn = document.getElementById('commit-recv-btn');
-                if (btn) btn.classList.remove('hidden');
-             } else if (rightListSales) {
-                if(rightListSales.innerText.includes("Pending")) rightListSales.innerHTML = '';
-                rightListSales.innerHTML += `
-                  <div style="background:rgba(239, 68, 68, 0.1); padding:8px; border-radius:6px; margin-bottom:8px; font-size:11px; border-left:3px solid var(--danger);">
-                     <p style="font-weight:bold; color:var(--danger);">Deduction Complete <i data-lucide="trash-2" style="width:10px; display:inline-block;"></i></p>
-                     <p style="color:var(--text-muted)">FIFO Adjusted: -1 Case</p>
-                  </div>
-                `;
-                const btn = document.getElementById('commit-sales-btn');
-                if (btn) btn.classList.remove('hidden');
-             }
-             lucide.createIcons();
-             App.closeModal();
-         }, 400);
-      };
-
       return container;
   },
 
@@ -555,9 +491,9 @@ const Components = {
          <div class="scanner-pulse" style="width:80px; height:80px; border-radius:50%; margin:0 auto 1.5rem auto; display:flex; align-items:center; justify-content:center; background:var(--bg-dark-surface);">
              <i data-lucide="${icon}" style="width:40px; height:40px; color:var(--primary);"></i>
          </div>
-         <h3>Awaiting Camera Permission...</h3>
-         <p style="margin-top:0.5rem; max-width: 300px; margin-left:auto; margin-right:auto;">This feature simulates native AI processing of invoices or sales reports.</p>
-         <button class="btn-primary" style="margin-top:1.5rem;" onclick="App.simulateScanProgress()"><i data-lucide="rocket"></i> Start Scan Simulation</button>
+         <h3>Awaiting Intelligence...</h3>
+         <p style="margin-top:0.5rem; max-width: 300px; margin-left:auto; margin-right:auto;">This feature uses client-side FREE AI for high-speed local processing.</p>
+         <button class="btn-primary" style="margin-top:1.5rem;" onclick="App.simulateScanProgress()"><i data-lucide="rocket"></i> Start Free AI Scan</button>
       </div>
     `;
     return container;
