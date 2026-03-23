@@ -1,0 +1,16 @@
+{
+  "name": "InventoryAI",
+  "short_name": "InventoryAI",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1120",
+  "theme_color": "#6610f2",
+  "description": "Premium AI-powered inventory tracking application",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgd2lkdGg9JzI0JyBoZWlnaHQ9JzI0Jz48cmVjdCB3aWR0aD0nMjQnIGhlaWdodD0nMjQnIGZpbGw9JyM2NjEwZjInLz48cGF0aCBkPSdNNCA0aDE2djE2SDRWNHonIGZpbGw9JyNmZmYnLz48L3N2Zz4=",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    }
+  ]
+}

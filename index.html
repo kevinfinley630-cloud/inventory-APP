@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Tracking - Web AI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/global.css">
+    <!-- PWA Manifest & PWA Metas -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6610f2">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js for Executive Dashboard -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- JsBarcode API for dynamic visual Code128 creation -->
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+    <div id="app">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="logo">Inventory<span>AI</span></h1>
+                <div style="display:flex; gap:10px; align-items:center;">
+                <button class="btn-primary scanner-pulse" id="global-scanner-btn" style="border-radius:24px; padding: 6px 20px; display:flex; align-items:center; gap:8px; font-weight:800; letter-spacing:1px; box-shadow: 0 0 15px var(--primary-glow);" aria-label="Scan Barcode">
+                    <i data-lucide="scan-line" style="width:18px;"></i> SCAN
+                </button>
+                <button class="icon-btn" id="theme-toggle-btn" onclick="App.toggleTheme()" aria-label="Toggle Theme">
+                    <i data-lucide="moon"></i>
+                </button>
+                <button class="icon-btn" aria-label="Settings">
+                        <i data-lucide="settings"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area (Dynamic Routing) -->
+        <main id="main-content" class="page-container">
+            <!-- Content injected via JS -->
+        </main>
+
+        <!-- Bottom Nav -->
+    <nav class="bottom-nav glass-panel" id="main-bottom-nav">
+        <a href="#dashboard" class="nav-item" data-route="dashboard" data-allowed-roles="admin,receiver,cashier,standard" style="color:var(--primary)">
+            <i data-lucide="pie-chart"></i>
+            <span>Dashboard</span>
+        </a>
+        <a href="#departments" class="nav-item" data-route="departments" data-allowed-roles="admin,receiver,cashier,standard">
+            <i data-lucide="list"></i>
+            <span>Database</span>
+        </a>
+            <button class="nav-item" data-route="tools" data-allowed-roles="admin,receiver" onclick="Router.navigate('tools')">
+                <i data-lucide="wrench"></i>
+                <span>Tools AI</span>
+            </button>
+            <button class="nav-item" data-route="receiving" data-allowed-roles="admin,receiver" onclick="Router.navigate('receiving')">
+                <i data-lucide="truck"></i>
+                <span>Receiving</span>
+            </button>
+            <button class="nav-item" data-route="sales" data-allowed-roles="admin,cashier" onclick="Router.navigate('sales')">
+                <i data-lucide="shopping-cart"></i>
+                <span>EOD Sales</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Modals and Overlays -->
+    <div id="modal-container" class="modal-backdrop hidden">
+        <div class="modal-content glass-panel" id="modal-body">
+            <!-- Modal injected via JS -->
+        </div>
+    </div>
+
+    <!-- Firebase Compat    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-functions-compat.js"></script>
+    <!-- Free Real AI Libraries (100% Client Side in Browser) -->
+    <!-- TensorFlow.js & COCO-SSD for Object/Box Detection -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
+
+    <!-- Auth Overlay -->
+    <div id="auth-overlay" class="hidden">
+      <div class="auth-box glass-panel">
+         <h1 class="logo" style="margin-bottom:1.5rem">Inventory<span style="color:var(--primary)">AI</span></h1>
+         <p style="margin-bottom:1.5rem; color:var(--text-muted)">Secure Passwordless Login.</p>
+         <input type="email" id="auth-email" class="input-field" placeholder="Enter your work email...">
+         <button class="btn-primary" style="width:100%; margin-top:10px" onclick="App.login()"><i data-lucide="mail"></i> Send Magic Link</button>
+         <p id="auth-status-msg" style="margin-top:15px; font-size:12px; color:var(--accent)"></p>
+         <p style="margin-top:15px; font-size:11px; color:var(--text-muted)">Bypassed automatically if Firebase Keys are omitted.</p>
+      </div>
+    </div>
+
+    <script src="js/store.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/components.js"></script>
+    <script src="js/app.js"></script>
+    
+    <!-- PWA Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js')
+            .then(reg => console.log('Service Worker Registered offline PWA!'))
+            .catch(err => console.log('SW Registration failed', err));
+        });
+      }
+    </script>
+</body>
+</html>
