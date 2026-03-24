@@ -133,65 +133,38 @@ const App = {
   },
 
   initAuth() {
-    if (typeof firebase === 'undefined' || !firebase.apps.length) {
-       document.getElementById('auth-overlay').classList.add('hidden');
-       Store.state.currentUser = "Mock User";
-       Store.state.currentRole = "admin";
-       this.updateNavVisibility();
+    // Check for existing PIN session in localStorage
+    const savedPin = localStorage.getItem('authorizedPin');
+    if (savedPin === "1234") {
+       this.authorizeWithPin(savedPin);
        return;
     }
 
-    // Check if returning from email link
-    if (firebase.auth().isSignInWithEmailLink(window.location.href)) {
-        let email = window.localStorage.getItem('emailForSignIn');
-        if (!email) {
-            email = window.prompt("Please provide your email for confirmation");
-        }
-        if (email) {
-            firebase.auth().signInWithEmailLink(email, window.location.href)
-            .then((result) => {
-                window.localStorage.removeItem('emailForSignIn');
-                window.location.hash = 'dashboard';
-            })
-            .catch((error) => alert("Auth Error: " + error.message));
-        }
-    }
+    // Default to show auth overlay
+    document.getElementById('auth-overlay').classList.remove('hidden');
+    Store.state.currentUser = null;
+    Store.state.currentRole = null;
+  },
 
-    firebase.auth().onAuthStateChanged((user) => {
-       if (user) {
-          Store.state.currentUser = user.email;
-          Store.state.currentRole = Store.determineRole(user.email);
-          document.getElementById('auth-overlay').classList.add('hidden');
-          this.updateNavVisibility();
-          // Re-evaluate current route to ensure they still have access
-          Router.handleRoute(); 
-       } else {
-          Store.state.currentUser = null;
-          Store.state.currentRole = null;
-          document.getElementById('auth-overlay').classList.remove('hidden');
-       }
-    });
+  authorizeWithPin(pin) {
+    if (pin === "1234") {
+       localStorage.setItem('authorizedPin', pin);
+       Store.state.currentUser = "Warehouse Admin";
+       Store.state.currentRole = "admin";
+       document.getElementById('auth-overlay').classList.add('hidden');
+       this.updateNavVisibility();
+       Router.handleRoute(); 
+       if(typeof AITeacher !== 'undefined') AITeacher.showTip("Welcome back! Device authorized via secure PIN.");
+    } else {
+       document.getElementById('auth-status-msg').innerText = "Invalid PIN. Try again.";
+       document.getElementById('auth-status-msg').style.color = "var(--danger)";
+    }
   },
 
   login() {
-    if (typeof firebase === 'undefined' || !firebase.apps.length) return;
-    const email = document.getElementById('auth-email').value;
-    if(!email) return alert("Enter your email address!");
-    
-    document.getElementById('auth-status-msg').innerText = "Sending secure link...";
-    const actionCodeSettings = {
-        url: window.location.href, // This returns them to the current page
-        handleCodeInApp: true
-    };
-    
-    firebase.auth().sendSignInLinkToEmail(email, actionCodeSettings)
-      .then(() => {
-        window.localStorage.setItem('emailForSignIn', email);
-        document.getElementById('auth-status-msg').innerText = "Link sent! Check your inbox and click the link to log in.";
-      })
-      .catch((error) => {
-        document.getElementById('auth-status-msg').innerText = "Error: " + error.message;
-      });
+    const pinInput = document.getElementById('auth-pin').value;
+    if(!pinInput || pinInput.length < 4) return alert("Enter 4-digit PIN!");
+    this.authorizeWithPin(pinInput);
   },
 
   updateNavVisibility() {
