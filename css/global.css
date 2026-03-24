@@ -293,33 +293,79 @@ p { color: var(--text-muted); line-height: 1.5; }
   justify-content: center;
   gap: 10px;
   letter-spacing: 0.5px;
-  box-shadow: 0 4px 20px rgba(99,102,241,0.3);
+  box-shadow: 0 4px 20px rgba(99,102,241,0.35), 0 0 0 1px rgba(99,102,241,0.15);
   position: relative;
   overflow: hidden;
+}
+/* Persistent shine sweep through every btn-primary */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 60%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 20%,
+    rgba(255,255,255,0.35) 50%,
+    transparent 80%
+  );
+  animation: btn-shine 2.8s infinite;
+  z-index: 1;
+}
+@keyframes btn-shine {
+  0%   { left: -100%; }
+  40%  { left: 130%; }
+  100% { left: 130%; }
 }
 .btn-primary::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(rgba(255,255,255,0.12), transparent);
+  background: linear-gradient(rgba(255,255,255,0.1), transparent);
   border-radius: inherit;
 }
 .btn-primary i {
   width: 18px;
   height: 18px;
-  filter: drop-shadow(0 0 6px rgba(255,255,255,0.6));
+  filter: drop-shadow(0 0 6px rgba(255,255,255,0.7));
   transition: transform 0.25s ease, filter 0.25s ease;
+  z-index: 2;
 }
+.btn-primary span { z-index: 2; position: relative; }
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(99,102,241,0.5), 0 0 0 1px rgba(99,102,241,0.3);
+  box-shadow: 0 8px 30px rgba(99,102,241,0.6), 0 0 0 2px rgba(99,102,241,0.4);
 }
 .btn-primary:hover i {
-  filter: drop-shadow(0 0 10px rgba(255,255,255,0.9));
-  transform: scale(1.15);
+  filter: drop-shadow(0 0 12px rgba(255,255,255,1));
+  transform: scale(1.2);
 }
 .btn-primary:active { transform: scale(0.97); }
 .btn-primary:active i { transform: scale(0.9); }
+
+/* Glow effect on icon-btn (settings, theme toggle) */
+.icon-btn {
+  position: relative;
+  overflow: hidden;
+}
+.icon-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(99,102,241,0.3) 0%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.icon-btn:hover::before { opacity: 1; }
+.icon-btn:hover {
+  background: rgba(255,255,255,0.1);
+  box-shadow: 0 0 16px rgba(99,102,241,0.4);
+  transform: scale(1.1);
+}
+.icon-btn i { width: 18px; height: 18px; }
 
 /* =====================
    LISTS / ITEMS
