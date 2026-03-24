@@ -29,9 +29,15 @@
         <!-- App Header -->
         <header class="app-header">
             <div class="header-content">
-                <div class="logo-wrap">
-                  <div class="logo-dot"></div>
-                  <h1 class="logo">Inventory<span>AI</span></h1>
+                <div style="display:flex; align-items:center; gap:10px;">
+                  <button class="back-btn" id="back-btn" onclick="history.back()">
+                    <i data-lucide="arrow-left"></i>
+                    <span>Back</span>
+                  </button>
+                  <div class="logo-wrap" id="logo-wrap">
+                    <div class="logo-dot"></div>
+                    <h1 class="logo">Inventory<span>AI</span></h1>
+                  </div>
                 </div>
                 <div style="display:flex; gap:8px; align-items:center;">
                 <button class="scan-fab" id="global-scanner-btn" aria-label="Scan Barcode">
