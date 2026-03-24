@@ -139,11 +139,39 @@ const App = {
        this.authorizeWithPin(savedPin);
        return;
     }
-
-    // Default to show auth overlay
+    // Show the PIN screen
     document.getElementById('auth-overlay').classList.remove('hidden');
+    lucide.createIcons();
+    this._pinBuffer = '';
     Store.state.currentUser = null;
     Store.state.currentRole = null;
+  },
+
+  pinPress(digit) {
+    if (!this._pinBuffer) this._pinBuffer = '';
+    if (this._pinBuffer.length >= 4) return;
+    this._pinBuffer += digit;
+    this._updatePinDots();
+    if (this._pinBuffer.length === 4) {
+      setTimeout(() => this.authorizeWithPin(this._pinBuffer), 120);
+    }
+  },
+
+  pinDel() {
+    if (!this._pinBuffer) return;
+    this._pinBuffer = this._pinBuffer.slice(0, -1);
+    this._updatePinDots();
+    document.getElementById('auth-status-msg').innerText = '';
+  },
+
+  _updatePinDots() {
+    for (let i = 1; i <= 4; i++) {
+      const dot = document.getElementById('dot-' + i);
+      if (dot) {
+        dot.classList.toggle('filled', i <= this._pinBuffer.length);
+        dot.classList.remove('error');
+      }
+    }
   },
 
   authorizeWithPin(pin) {
@@ -153,17 +181,29 @@ const App = {
        Store.state.currentRole = "admin";
        document.getElementById('auth-overlay').classList.add('hidden');
        this.updateNavVisibility();
-       Router.handleRoute(); 
-       if(typeof AITeacher !== 'undefined') AITeacher.showTip("Welcome back! Device authorized via secure PIN.");
+       Router.handleRoute();
+       this._pinBuffer = '';
+       if(typeof AITeacher !== 'undefined') AITeacher.showTip("Device authorized! Welcome, Warehouse Admin.");
     } else {
-       document.getElementById('auth-status-msg').innerText = "Invalid PIN. Try again.";
-       document.getElementById('auth-status-msg').style.color = "var(--danger)";
+       // Shake dots on failure
+       for (let i = 1; i <= 4; i++) {
+         const dot = document.getElementById('dot-' + i);
+         if (dot) { dot.classList.remove('filled'); dot.classList.add('error'); }
+       }
+       document.getElementById('auth-status-msg').innerText = "Incorrect PIN. Try again.";
+       this._pinBuffer = '';
+       setTimeout(() => {
+         for (let i = 1; i <= 4; i++) {
+           const dot = document.getElementById('dot-' + i);
+           if (dot) dot.classList.remove('error');
+         }
+       }, 600);
     }
   },
 
   login() {
     const pinInput = document.getElementById('auth-pin').value;
-    if(!pinInput || pinInput.length < 4) return alert("Enter 4-digit PIN!");
+    if(!pinInput || pinInput.length < 4) return;
     this.authorizeWithPin(pinInput);
   },
 
